@@ -10,16 +10,20 @@ struct Cli {
 
 fn main() {
     let args = Cli::parse();
-    let file = File::open(&args.path).expect("could not read file");
+    let file = File::open(&args.path).unwrap_or_else(|_| {
+        eprintln!("Error: Could not open file at path: {:?}", args.path);
+        std::process::exit(1);
+    });
     let reader = BufReader::new(file);
 
     for line in reader.lines() {
-        if let Ok(line) = line {
-            if line.contains(&args.pattern) {
-                println!("{}", line);
+        match line {
+            Ok(line) => {
+                if line.contains(&args.pattern) {
+                    println!("{}", line);
+                }
             }
+            Err(e) => eprintln!("Error: {}", e),
         }
     }
-
-    println!("pattern: {:?}, path: {:?}", args.pattern, args.path);
 }
